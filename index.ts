@@ -56,6 +56,12 @@ export class KDTree {
         return indices;
     }
 
+    radiusSearch(query: number[], radius: number): number[] {
+        const indices: number[] = [];
+        this.radiusSearchRecursive(query, this.root, indices, radius);
+        return indices;
+    }
+
     distance(x: number[], y: number[]): number {
         let sum2 = 0;
         for (let i = 0; i < x.length; i++) {
@@ -81,5 +87,24 @@ export class KDTree {
         }
         return queue;
     }
-}
 
+    radiusSearchRecursive(query: number[], node: Node | undefined, indices: number[], radius: number) {
+        if (typeof node === 'undefined') {
+            return indices;
+        }
+        if (typeof node.index !== 'undefined' && typeof node.axis !== 'undefined') {
+            let train = this.points[node.index];
+            let dist = this.distance(train, query);
+            if (dist < radius) {
+                indices.push(node.index);
+            }
+            const dir = query[node.axis] < train[node.axis] ? 0 : 1;
+            this.radiusSearchRecursive(query, node.next[dir], indices, radius);
+            const diff = Math.abs(query[node.axis] - train[node.axis])
+            if (diff < radius) {
+                this.radiusSearchRecursive(query, node.next[1 - dir], indices, radius);
+            }
+        }
+        return indices;
+    }
+}
